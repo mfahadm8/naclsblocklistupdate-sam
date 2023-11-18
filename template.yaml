@@ -9,7 +9,7 @@ Parameters:
   ####################################################################################
   SsmIpBlockListName:
     Type: String
-    Default: "SSM_IP_BLOCK_LIST_NAME"
+    Default: "IP_BLOCK_LIST_SSM_NAME"
 
   LambdaExecutionCronExpression:
     Default: "cron(*/2 * * * ? *)" # "cron(0 0 * * MON *)"

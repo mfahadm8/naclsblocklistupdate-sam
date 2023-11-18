@@ -5,7 +5,7 @@ import os
 
 def lambda_handler(event, context):
     # Step 1: Fetch SSM parameter named IP_BLOCK_LIST of type StringList
-    ssm_param_name = os.environ.get("SSM_IP_BLOCK_LIST_NAME", "IP_BLOCK_LIST")
+    ssm_param_name = os.environ.get("IP_BLOCK_LIST_SSM_NAME", "IP_BLOCK_LIST")
     ssm_client = boto3.client("ssm")
 
     try:
