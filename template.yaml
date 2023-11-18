@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  Resources needed to deploy a scheduled lambda function.
+
+####################################################################################
+Parameters:
+  ####################################################################################
+  SsmIpBlockListName:
+    Type: String
+    Default: "SSM_IP_BLOCK_LIST_NAME"
+
+  LambdaExecutionCronExpression:
+    Default: "cron(*/2 * * * ? *)" # "cron(0 0 * * MON *)"
+    Type: String
+
+####################################################################################
+Resources:
+  ####################################################################################
+
+  LambdaSchedule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Description: >
+        A schedule for the Lambda function..
+      ScheduleExpression: !Ref LambdaExecutionCronExpression
+      State: ENABLED
+      Targets:
+        - Arn: !Sub ${NaclBlockListUpdateLambda.Arn}
+          Id: LambdaSchedule
+
+  LambdaSchedulePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Sub ${NaclBlockListUpdateLambda.Arn}
+      Principal: "events.amazonaws.com"
+      SourceArn: !Sub ${LambdaSchedule.Arn}
+
+  NaclBlockListUpdateLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub "NaclBlockListUpdateLambda"
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      MemorySize: 128
+      Timeout: 600
+      Role:
+        Fn::GetAtt:
+          - NaclBlockListUpdateLambdaRole
+          - Arn
+      Environment:
+        Variables:
+          SSM_IP_BLOCK_LIST_NAME: !Ref SsmIpBlockListName
+      Code: .
+    Metadata:
+      BuildMethod: makefile
+
+  NaclBlockListUpdateLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: Lambda_Permissions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: "*"
