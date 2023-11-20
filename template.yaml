@@ -9,7 +9,7 @@ Parameters:
   ####################################################################################
   SsmIpBlockListName:
     Type: String
-    Default: "IP_BLOCK_LIST_SSM_NAME"
+    Default: "IP_BLOCK_LIST"
 
   LambdaExecutionCronExpression:
     Default: "cron(*/2 * * * ? *)" # "cron(0 0 * * MON *)"
@@ -52,7 +52,7 @@ Resources:
           - Arn
       Environment:
         Variables:
-          SSM_IP_BLOCK_LIST_NAME: !Ref SsmIpBlockListName
+          IP_BLOCK_LIST: !Ref SsmIpBlockListName
       Code: .
     Metadata:
       BuildMethod: makefile
@@ -80,4 +80,5 @@ Resources:
               - Effect: Allow
                 Action:
                   - ssm:GetParameter
+                  - ec2:*
                 Resource: "*"
